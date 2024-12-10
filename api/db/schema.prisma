@@ -5,20 +5,53 @@
 // https://www.prisma.io/docs/orm/prisma-migrate
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = "native"
+  provider = "prisma-client-js"
 }
 
-// Define your own datamodels here and run `yarn redwood prisma migrate dev`
-// to create migrations for them and apply to your dev DB.
-// TODO: Please remove the following example:
-model UserExample {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+// stores blog articles fetched from different sources
+// helps track scraping progress and content status
+model Article {
+  id        String   @id @default(cuid())    // unique id
+  url       String   @unique                 // article source url
+  title     String                          // article title
+  content   String?  @db.Text               // full content, nullable if scrape fails
+  date      DateTime?                       // when article was published
+  source    String                          // which site it's from (eg: coinbase)
+  status    String   @default("pending")    // pending/success/failed
+  createdAt DateTime @default(now())        // when we first saw it
+  updatedAt DateTime @updatedAt             // last update time
+}
+
+// handles proxy configuration for ip rotation
+// keeps track of which proxies are working and their health
+model Proxy {
+  id        String    @id @default(cuid())   // unique id
+  host      String                          // proxy host/ip
+  port      Int                             // proxy port
+  protocol  String    @default("http")      // http/https/socks
+  username  String?                         // auth username if needed
+  password  String?                         // auth password if needed
+  lastUsed  DateTime?                       // last time we used this proxy
+  active    Boolean   @default(true)        // is this proxy available
+  failCount Int       @default(0)           // how many times it failed
+  createdAt DateTime  @default(now())       // when added
+  updatedAt DateTime  @updatedAt            // last update
+}
+
+// keeps track of scraping jobs and their status
+// useful for monitoring and debugging scraping runs
+model ScrapingJob {
+  id        String    @id @default(cuid())   // unique id
+  source    String                          // target website
+  status    String    @default("pending")   // pending/running/completed/failed
+  startTime DateTime?                       // when job started
+  endTime   DateTime?                       // when job finished
+  error     String?                         // error message if failed
+  createdAt DateTime  @default(now())       // when created
+  updatedAt DateTime  @updatedAt            // last update
 }
