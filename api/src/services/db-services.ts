@@ -28,6 +28,14 @@ export const articles = {
       orderBy: { createdAt: 'desc' },
     })
   },
+
+  findByUrls: (urls: string[]) => {
+    return db.article.findMany({
+      where: {
+        url: { in: urls },
+      },
+    })
+  },
 }
 
 // handles proxy server operations
@@ -45,7 +53,7 @@ export const proxies = {
     return db.proxy.findFirst({
       where: {
         active: true,
-        failCount: { lt: 3 }, // 失败次数小于3次的代理
+        failCount: { lt: 3 }, // less than 3 failed times
       },
       orderBy: { lastUsed: 'asc' },
     })
@@ -59,7 +67,7 @@ export const proxies = {
       data: {
         lastUsed: new Date(),
         failCount: newFailCount,
-        active: success || false, // 如果成功则active为true，失败则为false
+        active: success || false, // if success, active is true, otherwise false
       },
     })
   },
