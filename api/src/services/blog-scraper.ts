@@ -101,14 +101,81 @@ export const blogScraper = {
         waitUntil: 'networkidle2',
         timeout: 30000,
       })
-
       const article = await page.evaluate((sel) => {
-        return {
-          title: document.querySelector(sel.title)?.textContent?.trim() || '',
-          content:
-            document.querySelector(sel.content)?.textContent?.trim() || '',
-          dateText: document.querySelector(sel.date)?.textContent?.trim() || '',
+        function cleanText(text) {
+          return text ? text.replace(/^\s+|\s+$/g, '') : ''
         }
+
+        // get title
+        const titleEl = document.querySelector(sel.title)
+        const title = titleEl ? cleanText(titleEl.textContent) : ''
+
+        // get all content containers
+        const contentContainers = document.querySelectorAll(
+          [
+            'div[class*="rich-text"]',
+            'div[id^="article_"]',
+            'div[id^="anchor-"]',
+            'div[class*="jtgvRU"]',
+          ].join(',')
+        )
+
+        let content = ''
+        let dateText = ''
+
+        if (contentContainers.length > 0) {
+          const parts = []
+
+          // iterate over each content container
+          for (const container of contentContainers) {
+            // get all text elements, including titles and paragraphs
+            const textElements = container.querySelectorAll(
+              'h1, h2, h3, h4, h5, h6, p, li, blockquote, div[class*="text"]'
+            )
+
+            for (const el of textElements) {
+              // handle titles
+              const tagName = el.tagName.toLowerCase()
+              if (tagName[0] === 'h' && tagName.length === 2) {
+                const headingText = cleanText(el.textContent)
+                if (headingText) {
+                  parts.push(`\n## ${headingText}\n`)
+                  continue
+                }
+              }
+
+              // handle special marked text
+              const specialEl = el.querySelector('b, strong')
+              const specialText = specialEl
+                ? cleanText(specialEl.textContent)
+                : ''
+              const mainText = el.textContent || ''
+              const cleanedText = cleanText(mainText.replace(specialText, ''))
+
+              // skip empty content or content only containing specific characters
+              if (!cleanedText || cleanedText === '·' || cleanedText === '|') {
+                continue
+              }
+
+              // add content
+              if (cleanedText) {
+                if (specialText) {
+                  parts.push(`**${specialText}**: ${cleanedText}`)
+                } else {
+                  parts.push(cleanedText)
+                }
+              }
+            }
+          }
+
+          content = parts.join('\n\n')
+        }
+
+        // get date
+        const dateEl = document.querySelector(sel.date)
+        dateText = dateEl ? cleanText(dateEl.textContent) : ''
+
+        return { title, content, dateText }
       }, config.selectors)
 
       // use formatDate to handle date
