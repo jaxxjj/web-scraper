@@ -19,3 +19,8 @@
   open = true
 [notifications]
   versionUpdates = ["latest"]
+[experimental]
+  scheduled = true
+
+[scheduled]
+  scraper = "0 */6 * * *"  # 每6小时运行一次

@@ -36,6 +36,67 @@ export const okxConfig: IBlogConfig = {
   },
 }
 ```
+
+## scraper script
+Example: okx
+
+```typescript
+import { IBlogConfig } from '.'
+
+export const okxConfig: IBlogConfig = {
+  name: 'okx',
+  baseUrl: 'https://www.okx.com',
+  indexPage: '/learn/category/blog',
+  selectors: {
+    // article list page
+    articleLinks:
+      'a.academy.academy-powerLink-a11y.academy-powerLink[class*="layout"][href^="/learn"]',
+    nextPage: '.academy-pagination a[href*="page"]',
+    // article detail page
+    title: 'h1',
+    content:
+      'div[class*="contentRichTextContainer"] p, div[class*="contentRichTextContainer"] li',
+    date: 'div[class*="updatedTime"]',
+    contentContainers: ['div[class*="contentRichTextContainer"]'],
+    excludeClasses: ['index_disclaimerContainer__5w-ON'],
+  },
+  pagination: {
+    type: 'button',
+    maxPages: 3,
+  },
+}
+```
+
+
+```bash
+[STARTED] Generating Prisma client
+[COMPLETED] Generating Prisma client
+[STARTED] Running script
+start testing OKX blog scraping...
+config: {
+  name: 'okx',
+  baseUrl: 'https://www.okx.com/learn/category/blog',
+  pagination: 'button',
+  maxPages: 3
+}
+
+start scraping article list...
+Connecting to Scraping Browser...
+Visiting: https://www.okx.com/learn/category/blog
+Looking for Show More button: .academy-pagination a[href*="page"]
+Found Show More button
+no new articles loaded
+scraping article: https://www.okx.com/learn/okx-wallet-dex-modes
+scraping article: https://www.okx.com/learn/okx-proof-of-reserves-25
+scraping article: https://www.okx.com/learn/okx-belgium-launch
+scraping article: https://www.okx.com/learn/okx-dex-api-phantom
+scraping article: https://www.okx.com/learn/okx-forteus-regulated-custody
+scraping article: https://www.okx.com/learn/okx-smart-picks
+scraping article: https://www.okx.com/learn/okx-creators-collective
+
+result: { total: 24, new: 7, existing: 3 }
+```
+
 ## test
 
 ```typescript
@@ -62,13 +123,6 @@ export default async function testOkxScraper() {
       new: result.new,
       existing: result.existing,
     })
-
-    // if want to test single article scraping
-    /*
-    console.log('\ntest single article scraping...')
-    const testUrl = 'https://www.okx.com/learn/okx-wallet-alpha-traders'
-    await blogScraper.scrapeArticle(testUrl, okxConfig)
-    */
 
     console.log('\ntest completed!')
   } catch (error) {
@@ -99,7 +153,15 @@ for (const url of newLinks) {
 
 # CI/CD
 
+local test workflow:
 
+```bash
+act -W .github/workflows/test.yml \
+    --container-architecture linux/amd64 \
+    --bind \
+    -v \
+    -P ubuntu-latest=catthehacker/ubuntu:act-latest
+```
 
 # develop the front-end interface
 
