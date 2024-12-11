@@ -1,9 +1,19 @@
+#
+
+## home page
+
+![Main Page](web/public/main-page.png)
+
+## articles
+
+![Articles Page](web/public/article-page.png)
 # Stacks
 
 - RedwoodJS
 - Puppeteer
 - Docker
 - PostgreSQL
+- MaterialUI
 
 # database and models
 
@@ -11,6 +21,61 @@
 2. docker compose postgres
 3. define db services
 4. seed data
+
+```prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://postgres:postgres@localhost:5432/web_scraper_dev"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// stores blog articles fetched from different sources
+// helps track scraping progress and content status
+model Article {
+  id        String   @id @default(cuid())    // unique id
+  url       String   @unique                 // article source url
+  title     String                          // article title
+  content   String?  @db.Text               // full content, nullable if scrape fails
+  date      DateTime?                       // when article was published
+  source    String                          // which site it's from (eg: coinbase)
+  status    String   @default("pending")    // pending/success/failed
+  createdAt DateTime @default(now())        // when we first saw it
+  updatedAt DateTime @updatedAt             // last update time
+}
+
+// handles proxy configuration for ip rotation
+// keeps track of which proxies are working and their health
+model Proxy {
+  id        String    @id @default(cuid())   // unique id
+  host      String                          // proxy host/ip
+  port      Int                             // proxy port
+  protocol  String    @default("http")      // http/https/socks
+  username  String?                         // auth username if needed
+  password  String?                         // auth password if needed
+  lastUsed  DateTime?                       // last time we used this proxy
+  active    Boolean   @default(true)        // is this proxy available
+  failCount Int       @default(0)           // how many times it failed
+  createdAt DateTime  @default(now())       // when added
+  updatedAt DateTime  @updatedAt            // last update
+}
+
+// keeps track of scraping jobs and their status
+// useful for monitoring and debugging scraping runs
+model ScrapingJob {
+  id        String    @id @default(cuid())   // unique id
+  source    String                          // target website
+  status    String    @default("pending")   // pending/running/completed/failed
+  startTime DateTime?                       // when job started
+  endTime   DateTime?                       // when job finished
+  error     String?                         // error message if failed
+  createdAt DateTime  @default(now())       // when created
+  updatedAt DateTime  @updatedAt            // last update
+}
+```
 
 # achieve the core function of the crawler
 
