@@ -6,7 +6,7 @@
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = "postgresql://postgres:postgres@localhost:5432/web_scraper_dev"
 }
 
 generator client {
