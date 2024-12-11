@@ -74,7 +74,6 @@ jobs:
     - name: Run tests
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/web_scraper_dev
-        RWJS_CWD: /Users/yimingchen/tutorial/web-scraper
         NODE_ENV: test
       run: |
         yarn add -D prisma@5.20.0
