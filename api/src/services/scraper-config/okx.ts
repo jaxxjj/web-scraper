@@ -14,7 +14,8 @@ export const okxConfig: IBlogConfig = {
     content:
       'div[class*="contentRichTextContainer"] p, div[class*="contentRichTextContainer"] li',
     date: 'div[class*="updatedTime"]',
-    contentContainers: ['div[class*="contentRichTextContainer"]'], // OKX 特定的内容容器选择器
+    contentContainers: ['div[class*="contentRichTextContainer"]'],
+    excludeClasses: ['index_disclaimerContainer__5w-ON'],
   },
   pagination: {
     type: 'button',

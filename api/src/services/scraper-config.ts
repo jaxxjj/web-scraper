@@ -10,6 +10,7 @@ export interface IBlogConfig {
     nextPage?: string
     category?: string
     contentContainers?: string[]
+    excludeClasses?: string[]
   }
   pagination: {
     type: 'infinite-scroll' | 'button'

@@ -107,6 +107,18 @@ export const blogScraper = {
           return text ? text.replace(/^\s+|\s+$/g, '') : ''
         }
 
+        // remove exclude classes
+        if (sel.excludeClasses) {
+          for (let i = 0; i < sel.excludeClasses.length; i++) {
+            const elements = document.querySelectorAll(
+              `[class*="${sel.excludeClasses[i]}"]`
+            )
+            for (let j = 0; j < elements.length; j++) {
+              elements[j].remove()
+            }
+          }
+        }
+
         const titleEl = document.querySelector(sel.title)
         const title = titleEl ? cleanText(titleEl.textContent) : ''
 
