@@ -88,7 +88,7 @@ export const blogScraper = {
   },
 
   scrapeArticle: async (url: string, config: IBlogConfig) => {
-    console.log(`Scraping article: ${url}`)
+    console.log(`scraping article: ${url}`)
     const browser: Browser = await puppeteer.connect(
       proxyService.getScrapingBrowser()
     )
@@ -101,6 +101,7 @@ export const blogScraper = {
         waitUntil: 'networkidle2',
         timeout: 30000,
       })
+
       const article = await page.evaluate((sel) => {
         function cleanText(text) {
           return text ? text.replace(/^\s+|\s+$/g, '') : ''
@@ -116,7 +117,6 @@ export const blogScraper = {
             'div[class*="rich-text"]',
             'div[id^="article_"]',
             'div[id^="anchor-"]',
-            'div[class*="jtgvRU"]',
           ].join(',')
         )
 
@@ -125,45 +125,56 @@ export const blogScraper = {
 
         if (contentContainers.length > 0) {
           const parts = []
+          const processedTexts = {}
 
           // iterate over each content container
           for (const container of contentContainers) {
-            // get all text elements, including titles and paragraphs
+            // get all text elements, including title and paragraphs
             const textElements = container.querySelectorAll(
               'h1, h2, h3, h4, h5, h6, p, li, blockquote, div[class*="text"]'
             )
 
             for (const el of textElements) {
-              // handle titles
+              // handle title
               const tagName = el.tagName.toLowerCase()
-              if (tagName[0] === 'h' && tagName.length === 2) {
+              if (
+                tagName === 'h1' ||
+                tagName === 'h2' ||
+                tagName === 'h3' ||
+                tagName === 'h4' ||
+                tagName === 'h5' ||
+                tagName === 'h6'
+              ) {
                 const headingText = cleanText(el.textContent)
-                if (headingText) {
+                if (headingText && !processedTexts[headingText]) {
                   parts.push(`\n## ${headingText}\n`)
-                  continue
+                  processedTexts[headingText] = true
                 }
+                continue
               }
 
-              // handle special marked text
-              const specialEl = el.querySelector('b, strong')
+              // handle special text
+              const specialEl = el.querySelector('b')
               const specialText = specialEl
                 ? cleanText(specialEl.textContent)
                 : ''
               const mainText = el.textContent || ''
               const cleanedText = cleanText(mainText.replace(specialText, ''))
 
-              // skip empty content or content only containing specific characters
-              if (!cleanedText || cleanedText === '·' || cleanedText === '|') {
+              // skip empty content or processed content
+              if (!cleanedText || processedTexts[cleanedText]) {
                 continue
               }
 
-              // add content
-              if (cleanedText) {
-                if (specialText) {
-                  parts.push(`**${specialText}**: ${cleanedText}`)
-                } else {
-                  parts.push(cleanedText)
+              if (specialText) {
+                const combinedText = `${specialText}: ${cleanedText}`
+                if (!processedTexts[combinedText]) {
+                  parts.push(combinedText)
+                  processedTexts[combinedText] = true
                 }
+              } else {
+                parts.push(cleanedText)
+                processedTexts[cleanedText] = true
               }
             }
           }
@@ -171,7 +182,6 @@ export const blogScraper = {
           content = parts.join('\n\n')
         }
 
-        // get date
         const dateEl = document.querySelector(sel.date)
         dateText = dateEl ? cleanText(dateEl.textContent) : ''
 
@@ -181,7 +191,7 @@ export const blogScraper = {
       // use formatDate to handle date
       const parsedDate = formatDate(article.dateText)
 
-      // create article data object, only include date field when it's valid
+      // create article data object
       const articleData = {
         url,
         source: config.name,
@@ -193,7 +203,7 @@ export const blogScraper = {
 
       await articles.create(articleData)
     } catch (error) {
-      console.error(`Failed to scrape article ${url}:`, error)
+      console.error(`failed to scrape article ${url}:`, error)
       throw error
     } finally {
       await browser.close()
