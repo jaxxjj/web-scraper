@@ -1,13 +1,24 @@
-#
+# Crypto News Scraper
 
-## home page
+A web scraping tool that collects and displays crypto news from OKX and Coinbase.
+
+## Home Page
 
 ![Main Page](web/public/main-page.png)
 
-## articles
+## Articles Page
 
 ![Articles Page](web/public/article-page.png)
-# Stacks
+
+## Features
+
+- Auto-scrapes exchange news every 6 hours
+- Filters duplicate content
+- Clean reading interface
+- Original source links
+- Mobile responsive
+
+## Tech Stack
 
 - RedwoodJS
 - Puppeteer
@@ -15,15 +26,14 @@
 - PostgreSQL
 - MaterialUI
 
-# database and models
+## Database and Models
 
-1. define schema
-2. docker compose postgres
-3. define db services
-4. seed data
+1. Define schema
+2. Docker compose postgres
+3. Define db services
+4. Seed data
 
 ```prisma
-
 datasource db {
   provider = "postgresql"
   url      = "postgresql://postgres:postgres@localhost:5432/web_scraper_dev"
@@ -76,6 +86,24 @@ model ScrapingJob {
   updatedAt DateTime  @updatedAt            // last update
 }
 ```
+
+## Quick Start
+
+```bash
+# Install dependencies
+yarn install
+
+# Start PostgreSQL
+docker-compose up -d
+
+# Run migrations
+yarn rw prisma migrate dev
+
+# Start dev server
+yarn rw dev
+```
+
+Visit `http://localhost:8910`
 
 # achieve the core function of the crawler
 
