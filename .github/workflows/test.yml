@@ -1,0 +1,95 @@
+name: Test Scraper
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: web_scraper_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+
+    - name: Setup Node.js
+      if: success() || failure()
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+
+    # enable Corepack
+    - name: Enable Corepack
+      run: corepack enable
+
+    # install dependencies
+    - name: Install dependencies
+      run: yarn install
+
+    # setup environment variables
+    - name: Setup environment variables
+      run: |
+        export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/web_scraper_dev"
+        echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/web_scraper_dev" >> $GITHUB_ENV
+        echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/web_scraper_dev" > .env
+
+    # run Prisma Migrate
+    - name: Run Prisma Migrate
+      run: |
+        yarn add -D prisma@5.20.0
+
+        sed -i 's#url      = "postgresql://postgres:postgres@localhost:5432/web_scraper_dev"#url      = env("DATABASE_URL")#' api/db/schema.prisma
+        yarn prisma generate --schema api/db/schema.prisma
+        yarn prisma db push --schema api/db/schema.prisma --accept-data-loss
+
+    # test database connection
+    - name: Test database connection
+      run: |
+        apt-get update && apt-get install -y postgresql-client
+        echo "Waiting for postgres..."
+        timeout 30 bash -c 'until pg_isready -h localhost -p 5432 -U postgres; do sleep 2; done'
+        echo "PostgreSQL is ready"
+        psql -h localhost -U postgres -c '\l'
+      env:
+        PGPASSWORD: postgres
+
+    # run tests
+    - name: Run tests
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/web_scraper_dev
+        RWJS_CWD: /Users/yimingchen/tutorial/web-scraper
+        NODE_ENV: test
+      run: |
+        yarn add -D prisma@5.20.0
+        yarn add -D @redwoodjs/cli
+
+        yarn prisma generate --schema api/db/schema.prisma
+        yarn prisma db push --schema api/db/schema.prisma --accept-data-loss
+        yarn rw prisma migrate reset --force --skip-seed
+
+        yarn rw test api/src/services/__tests__/okx-scraper.test.ts --verbose
+        yarn rw test api/src/services/__tests__/coinbase-scraper.test.ts --verbose
+
+    # if test failed, cleanup
+    - name: Cleanup
+      if: always()
+      run: |
+        echo "Cleaning up resources..."

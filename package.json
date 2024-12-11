@@ -6,9 +6,15 @@
       "web"
     ]
   },
+  "scripts": {
+    "test": "yarn rw test",
+    "test:watch": "yarn rw test --watch"
+  },
   "devDependencies": {
+    "@redwoodjs/cli": "^8.4.1",
     "@redwoodjs/core": "8.4.1",
-    "@redwoodjs/project-config": "8.4.1"
+    "@redwoodjs/project-config": "8.4.1",
+    "prisma": "5.20.0"
   },
   "eslintConfig": {
     "extends": "@redwoodjs/eslint-config",

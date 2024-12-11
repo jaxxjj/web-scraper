@@ -4466,7 +4466,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@redwoodjs/cli@npm:8.4.1":
+"@redwoodjs/cli@npm:8.4.1, @redwoodjs/cli@npm:^8.4.1":
   version: 8.4.1
   resolution: "@redwoodjs/cli@npm:8.4.1"
   dependencies:
@@ -15789,8 +15789,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
+    "@redwoodjs/cli": "npm:^8.4.1"
     "@redwoodjs/core": "npm:8.4.1"
     "@redwoodjs/project-config": "npm:8.4.1"
+    prisma: "npm:5.20.0"
     puppeteer-extra: "npm:^3.3.6"
     puppeteer-extra-plugin-stealth: "npm:^2.11.2"
   languageName: unknown
