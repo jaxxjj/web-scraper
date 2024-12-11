@@ -107,17 +107,11 @@ export const blogScraper = {
           return text ? text.replace(/^\s+|\s+$/g, '') : ''
         }
 
-        // get title
         const titleEl = document.querySelector(sel.title)
         const title = titleEl ? cleanText(titleEl.textContent) : ''
 
-        // get all content containers
         const contentContainers = document.querySelectorAll(
-          [
-            'div[class*="rich-text"]',
-            'div[id^="article_"]',
-            'div[id^="anchor-"]',
-          ].join(',')
+          (sel.contentContainers || ['div[class*="rich-text"]']).join(',')
         )
 
         let content = ''

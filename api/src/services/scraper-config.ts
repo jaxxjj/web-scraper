@@ -9,6 +9,7 @@ export interface IBlogConfig {
     date: string
     nextPage?: string
     category?: string
+    contentContainers?: string[]
   }
   pagination: {
     type: 'infinite-scroll' | 'button'

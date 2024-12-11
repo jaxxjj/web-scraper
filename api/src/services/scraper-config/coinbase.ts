@@ -16,5 +16,10 @@ export const coinbaseConfig: IBlogConfig = {
     content: 'div[class*="rich-text"] p',
     date: 'p[color="foregroundMuted"]:last-child',
     category: 'p[color="primary"]',
+    contentContainers: [
+      'div[class*="rich-text"]',
+      'div[id^="article_"]',
+      'div[id^="anchor-"]',
+    ],
   },
 }
